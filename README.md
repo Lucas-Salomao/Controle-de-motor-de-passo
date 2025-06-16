@@ -73,6 +73,8 @@ As bibliotecas necessárias são gerenciadas automaticamente pelo arquivo `platf
 | | `VCC` | `5V` |
 | | `GND` | `GND` |
 
+![Diagrama](./diagrama_bb.png)
+
 ## 📁 Estrutura do Projeto
 
 O projeto está organizado da seguinte forma para facilitar a manutenção:
