@@ -1,47 +1,43 @@
-#pragma once // Evita que o arquivo seja incluído múltiplas vezes
+#ifndef CONFIG_H
+#define CONFIG_H
 
-// --- Pinos do Motor de Passo (Driver A4988 ou similar) ---
-// Conecte os pinos do driver aos pinos digitais do Arduino
-#define MOTOR_STEP_PIN 2
-#define MOTOR_DIR_PIN 3
-#define MOTOR_ENABLE_PIN 8
+// --- Pinos de Controle de Micro-passo (A4988) ---
+#define MS1_PIN         14
+#define MS2_PIN         12
+#define MS3_PIN         13
 
-// --- Configuração da Lógica do Pino ENABLE ---
-// Defina o nível lógico para Habilitar e Desabilitar o motor.
-// Para A4988/DRV8825 (ativo baixo): ENABLE = LOW, DISABLE = HIGH
-// Para outros drivers (ativo alto):  ENABLE = HIGH, DISABLE = LOW
-#define MOTOR_ENABLE_LEVEL   LOW
-#define MOTOR_DISABLE_LEVEL  HIGH
+// Configurações do Motor de Passo
+#define STEP_PIN        26
+#define DIR_PIN         25
+#define ENABLE_PIN      27
+#define BASE_STEPS_PER_REV   200
+#define STEP_DELAY_US   1000  // Microsegundos entre pulsos
 
-// --- Pinos do Encoder Rotativo ---
-#define ENCODER_CLK_PIN 4 // Pino CLK do encoder
-#define ENCODER_DT_PIN 5  // Pino DT do encoder
-#define ENCODER_SW_PIN 6  // Pino do botão (switch)
+// Configurações do Display OLED
+#define SCREEN_WIDTH    128
+#define SCREEN_HEIGHT   64
+#define OLED_RESET      -1
+#define SCREEN_ADDRESS  0x3C
 
-// --- Pino do Relé ---
-#define RELAY_PIN 7
+// Defina aqui quantos itens do menu principal devem ser visíveis na tela.
+// Para sua tela de 64px de altura, 3 ou 4 é um bom valor.
+#define MAX_VISIBLE_MENU_ITEMS 3
 
-// =========================================================================
-// --- CONFIGURAÇÃO DO TIPO DE DISPLAY ---
-// Descomente APENAS UMA das linhas abaixo, dependendo do seu display.
-//
-// DISPLAY_0_96_INCH: Para displays de 0.96" (128x64, controlador SSD1306)
-// DISPLAY_1_3_INCH: Para displays de 1.3" (128x64, controlador SH1106)
-// =========================================================================
-#define DISPLAY_0_96_INCH
-// #define DISPLAY_1_3_INCH
+// Configurações do Encoder
+#define ENCODER_CLK     18
+#define ENCODER_DT      19
+#define ENCODER_SW      5
+#define ENCODER_PULSES_PER_STEP 4
 
-// --- Configurações do Display OLED I2C ---
-#define SCREEN_WIDTH 128 // Largura do OLED em pixels
-#define SCREEN_HEIGHT 64 // Altura do OLED em pixels
-#define OLED_RESET -1    // Pino de reset (-1 se estiver compartilhando o pino de reset do Arduino)
-#define I2C_ADDRESS 0x3C // Endereço I2C mais comum para ambos os displays
+// Configurações do Relé
+#define RELAY_PIN       32
 
-// --- Configurações do Motor ---
-#define STEPS_PER_REVOLUTION 200 // 200 passos por volta (motor de 1.8 graus)
-#define DEGREES_PER_STEP 1.8     // 360 / 200 = 1.8
+// Configurações de timing
+#define RELAY_ON_TIME   500   // ms
+#define RELAY_OFF_TIME  500   // ms
+#define STEP_SETTLE_TIME 100  // ms
 
-// --- Configurações de Funcionamento ---
-#define RELAY_ON_TIME_MS 500  // Tempo que o relé fica acionado em milissegundos
-#define PAUSE_AFTER_RELAY_MS 500 // Pausa após o acionamento do relé em milissegundos
-#define LONG_PRESS_TIME_MS 1000 // Tempo para considerar um "clique longo"
+// Configurações do sistema
+#define ANGLE_INCREMENT 18    // 1.8 graus em décimos (18 = 1.8°)
+
+#endif
