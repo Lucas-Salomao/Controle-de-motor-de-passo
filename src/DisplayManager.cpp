@@ -245,6 +245,28 @@ void DisplayManager::showError(const char* message) {
     display.display();
 }
 
+void DisplayManager::showRelayTimeSetup(int timeMs) {
+    clear();
+    
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.println("=== TEMPO DO RELE ===");
+    display.println();
+    
+    // Mostra o tempo formatado em segundos
+    display.setTextSize(2);
+    display.setCursor(15, 20);
+    display.printf("%.2f s", timeMs / 1000.0);
+    
+    // Instruções
+    display.setTextSize(1);
+    display.setCursor(0, 45);
+    display.println("Gire: Ajustar");
+    display.println("Clique: Confirmar");
+    
+    display.display();
+}
+
 Adafruit_SSD1306* DisplayManager::getDisplay() {
     return &display;
 }

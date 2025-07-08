@@ -22,7 +22,8 @@ public:
     void showAngleSetup(int angle);
     void showPositioning(int targetAngle, int stepsToMove);
     void showMotorDisabled();
-     void showMicrostepSetup(int selectedIndex);
+    void showMicrostepSetup(int selectedIndex);
+    void showRelayTimeSetup(int timeMs);
     void showError(const char* message);
     Adafruit_SSD1306* getDisplay();
 };

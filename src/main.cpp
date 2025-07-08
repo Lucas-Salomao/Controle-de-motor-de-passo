@@ -16,6 +16,7 @@ void finishCycle();
 void startPositioning();
 void handleMicrostepSetup();
 void applyMicrostepSetting(int setting);
+void handleRelayTimeSetup();
 
 // Instâncias dos controladores
 StepperController stepper;
@@ -29,14 +30,16 @@ enum SystemState {
   ANGLE_SETUP,
   POSITIONING,
   MOTOR_DISABLED,
-  MICROSTEP_SETUP
+  MICROSTEP_SETUP,
+  RELAY_TIME_SETUP
 };
 
 const char* menuItems[] = {
   "1. Ciclo Completo",
   "2. Posicionamento",
   "3. Micro-passo",
-  "4. Desligar Motor"
+  "4. Tempo do Rele",
+  "5. Desligar Motor"
   // Adicione mais itens aqui se precisar no futuro
 };
 const int totalMenuItems = sizeof(menuItems) / sizeof(char*);
@@ -61,6 +64,7 @@ int cycleStep = 0; // 0: relay on, 1: relay off wait, 2: move step, 3: step wait
 int cyclePosition = 0; // posição atual no ciclo completo
 
 bool resetMenuState = false;
+unsigned long RELAY_ON_TIME = 1000;
 
 void setup() {
   Serial.begin(115200);
@@ -133,6 +137,10 @@ void loop() {
 
     case MICROSTEP_SETUP:
       handleMicrostepSetup();
+      break;
+
+    case RELAY_TIME_SETUP:
+      handleRelayTimeSetup();
       break;
   }
   
@@ -231,7 +239,12 @@ void handleMainMenu() {
         currentState = MICROSTEP_SETUP;
         display.showMicrostepSetup(currentMicrostep);
         break;
-      case 3: // Desabilitar motor
+      case 3: // Tempo do Relé <-- NOVA OPÇÃO
+        currentState = RELAY_TIME_SETUP;
+        // Chama a nova função de display (que criaremos a seguir)
+        display.showRelayTimeSetup(RELAY_ON_TIME);
+        break;
+      case 4: // Desabilitar motor
         stepper.disable();
         motorEnabled = false;
         currentState = MOTOR_DISABLED;
@@ -293,6 +306,32 @@ void handleMicrostepSetup() {
   }
 }
 
+void handleRelayTimeSetup() {
+  static int selectedTime = RELAY_ON_TIME; // Inicia com o valor atual
+
+  int direction = encoder.getDirection();
+  if (direction != 0) {
+    // Incrementa ou decrementa o tempo em 50ms
+    selectedTime += direction * 50;
+    
+    // Define limites para o tempo (ex: 50ms a 5000ms)
+    if (selectedTime < 50) selectedTime = 50;
+    if (selectedTime > 5000) selectedTime = 5000;
+    
+    display.showRelayTimeSetup(selectedTime);
+  }
+
+  // Se o botão for pressionado, salva o valor e volta ao menu
+  if (encoder.isPressed()) {
+    RELAY_ON_TIME = selectedTime; // Salva o novo valor na variável global
+    currentState = MENU_MAIN;
+    resetMenuState = true;
+    
+    Serial.printf("Novo tempo do rele definido para: %d ms\n", RELAY_ON_TIME);
+    delay(200);
+  }
+}
+
 void startFullCycle() {
   currentState = RUNNING_CYCLE;
   cycleStep = 0;
@@ -313,47 +352,45 @@ void handleRunningCycle() {
   unsigned long currentTime = millis();
   
   switch(cycleStep) {
-    case 0: // Relé ligado por 0.5s
-      if(currentTime - relayStartTime >= 500) {
-        digitalWrite(RELAY_PIN, HIGH);
-        lastStepTime = currentTime;
-        cycleStep = 1;
-      }
-      break;
-      
-    case 1: // Aguarda 0.5s com relé desligado
-      if(currentTime - lastStepTime >= 500) {
-        // Move um passo
-        stepper.moveOneStep();
+    case 0: // O relé está LIGADO, esperando o tempo definido.
+      // A constante RELAY_ON_TIME vem de config.h (500ms)
+      if (currentTime - relayStartTime >= RELAY_ON_TIME) {
+        // O tempo de 500ms passou. Agora, desligamos o relé e damos o passo.
+        digitalWrite(RELAY_PIN, HIGH); // Desliga o relé
+        stepper.moveOneStep();         // Move um passo imediatamente
+
+        // Atualiza as variáveis de posição e o display
         currentPosition = (currentPosition + 1) % activeStepsPerRev;
         cyclePosition++;
-        lastStepTime = currentTime;
-        cycleStep = 2;
-        
         display.showCycleProgress(cyclePosition, activeStepsPerRev);
+        
+        // Guarda o tempo do passo para a pequena pausa de estabilização
+        lastStepTime = currentTime;
+        cycleStep = 1; // Vai para o estado de pausa
       }
       break;
       
-    case 2: // Aguarda após movimento
-      if(currentTime - lastStepTime >= 10) { // Pequena pausa após movimento
-        if(cyclePosition >= activeStepsPerRev) {
-          // Ciclo completo finalizado
+    case 1: // Pausa de estabilização após o passo, antes de começar o próximo ciclo.
+      // A constante STEP_SETTLE_TIME vem de config.h (100ms)
+      if (currentTime - lastStepTime >= STEP_SETTLE_TIME) {
+        // A pausa terminou. Vamos verificar se o ciclo completo acabou.
+        if (cyclePosition >= activeStepsPerRev) {
+          // Sim, todos os passos foram dados.
           finishCycle();
         } else {
-          // Próximo passo do ciclo
-          digitalWrite(RELAY_PIN, LOW);
-          relayStartTime = currentTime;
-          cycleStep = 0;
+          // Não, ainda há passos a dar. Prepara para o próximo ciclo.
+          digitalWrite(RELAY_PIN, LOW); // Liga o relé novamente
+          relayStartTime = currentTime; // Reinicia o timer do relé
+          cycleStep = 0;                // Volta para o estado 0 para esperar os 500ms
         }
       }
       break;
   }
   
-  // Permite cancelar com botão
-  if(encoder.isPressed()) {
-    digitalWrite(RELAY_PIN, HIGH);
+  // A lógica para cancelar com o botão permanece a mesma e funciona perfeitamente.
+  if (encoder.isPressed()) {
+    digitalWrite(RELAY_PIN, HIGH); // Garante que o relé seja desligado ao cancelar
     currentState = MENU_MAIN;
-    // display.showMainMenu();
     resetMenuState = true;
     Serial.println("Ciclo cancelado");
     delay(200);

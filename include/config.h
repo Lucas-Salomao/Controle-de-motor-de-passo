@@ -33,7 +33,7 @@
 #define RELAY_PIN       32
 
 // Configurações de timing
-#define RELAY_ON_TIME   500   // ms
+// #define RELAY_ON_TIME   500   // ms
 #define RELAY_OFF_TIME  500   // ms
 #define STEP_SETTLE_TIME 100  // ms
 
