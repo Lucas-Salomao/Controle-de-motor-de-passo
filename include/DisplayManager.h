@@ -19,8 +19,10 @@ public:
     void showMainMenu(const char* items[], int totalItems, int selectedIndex, int startIndex);
     void showCycleProgress(int currentStep, int totalSteps);
     void showCycleComplete();
-    void showAngleSetup(int angle);
-    void showPositioning(int targetAngle, int stepsToMove);
+    // void showAngleSetup(int angle);
+    // void showPositioning(int targetAngle, int stepsToMove);
+    void showPositioning(int targetStep, int stepsToMove);
+    void showPositioningSetup(int steps); 
     void showMotorDisabled();
     void showMicrostepSetup(int selectedIndex);
     void showRelayTimeSetup(int timeMs);

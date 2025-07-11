@@ -172,28 +172,28 @@ void DisplayManager::showCycleComplete() {
     display.display();
 }
 
-void DisplayManager::showAngleSetup(int angle) {
-    clear();
+// void DisplayManager::showAngleSetup(int angle) {
+//     clear();
     
-    display.setTextSize(1);
-    display.setCursor(0, 0);
-    display.println("=== CONFIG ANGULO ===");
-    display.println();
+//     display.setTextSize(1);
+//     display.setCursor(0, 0);
+//     display.println("=== CONFIG ANGULO ===");
+//     display.println();
     
-    display.setTextSize(2);
-    display.setCursor(15, 20);
-    display.printf("%.1f", angle / 10.0);
-    display.println(" deg");
+//     display.setTextSize(2);
+//     display.setCursor(15, 20);
+//     display.printf("%.1f", angle / 10.0);
+//     display.println(" deg");
     
-    display.setTextSize(1);
-    display.setCursor(0, 45);
-    display.println("Gire: Ajustar");
-    display.println("Clique: Confirmar");
+//     display.setTextSize(1);
+//     display.setCursor(0, 45);
+//     display.println("Gire: Ajustar");
+//     display.println("Clique: Confirmar");
     
-    display.display();
-}
+//     display.display();
+// }
 
-void DisplayManager::showPositioning(int targetAngle, int stepsToMove) {
+void DisplayManager::showPositioning(int targetStep, int stepsToMove) {
     clear();
     
     display.setTextSize(1);
@@ -201,7 +201,7 @@ void DisplayManager::showPositioning(int targetAngle, int stepsToMove) {
     display.println("=== POSICIONANDO ===");
     display.println();
     
-    display.printf("Alvo: %.1f graus\n", targetAngle / 10.0);
+    display.printf("Alvo: Passo %d\n", targetStep);
     display.printf("Steps: %d\n", abs(stepsToMove));
     display.printf("Direcao: %s\n", stepsToMove >= 0 ? "Horario" : "Anti-hor.");
     
@@ -264,6 +264,25 @@ void DisplayManager::showRelayTimeSetup(int timeMs) {
     display.println("Gire: Ajustar");
     display.println("Clique: Confirmar");
     
+    display.display();
+}
+
+void DisplayManager::showPositioningSetup(int steps) {
+    clear();
+    
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.println("=== POSICAO FINAL ===");
+    
+    display.setTextSize(2);
+    display.setCursor(15, 20);
+    display.printf("Passo: %d", steps);
+    
+    display.setTextSize(1);
+    display.setCursor(0, 48);
+    display.println("Gire: Ajustar Pos.");
+    display.setCursor(0, 56);
+    display.println("Clique: Confirmar");
     display.display();
 }
 

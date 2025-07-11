@@ -8,12 +8,13 @@
 // Protótipos das funções
 void handleMainMenu();
 void handleRunningCycle();
-void handleAngleSetup();
+// void handleAngleSetup();
 void handlePositioning();
 void handleMotorDisabled();
 void startFullCycle();
 void finishCycle();
-void startPositioning();
+void startPositioning(int targetStep);
+void handlePositioningSetup(); 
 void handleMicrostepSetup();
 void applyMicrostepSetting(int setting);
 void handleRelayTimeSetup();
@@ -27,8 +28,9 @@ EncoderHandler encoder;
 enum SystemState {
   MENU_MAIN,
   RUNNING_CYCLE,
-  ANGLE_SETUP,
+  // ANGLE_SETUP,
   POSITIONING,
+  POSITIONING_SETUP,
   MOTOR_DISABLED,
   MICROSTEP_SETUP,
   RELAY_TIME_SETUP
@@ -47,6 +49,7 @@ const int totalMenuItems = sizeof(menuItems) / sizeof(char*);
 SystemState currentState = MENU_MAIN;
 int targetAngle = 0;
 int currentPosition = 0; // Posição atual em steps (0-199)
+int targetStepValue = 0;
 bool motorEnabled = true;
 
 // --- NOVAS VARIÁVEIS PARA MICRO-PASSO ---
@@ -123,13 +126,17 @@ void loop() {
       handleRunningCycle();
       break;
       
-    case ANGLE_SETUP:
-      handleAngleSetup();
-      break;
+    // case ANGLE_SETUP:
+    //   handleAngleSetup();
+    //   break;
       
     case POSITIONING:
       handlePositioning();
       break;
+
+    case POSITIONING_SETUP:
+       handlePositioningSetup();
+       break;
       
     case MOTOR_DISABLED:
       handleMotorDisabled();
@@ -231,9 +238,10 @@ void handleMainMenu() {
         startFullCycle();
         break;
       case 1: // Posicionamento
-        currentState = ANGLE_SETUP;
-        targetAngle = 0;
-        display.showAngleSetup(targetAngle);
+        currentState = POSITIONING_SETUP;
+        targetStepValue = currentPosition;
+        // targetAngle = 0;
+        display.showPositioningSetup(targetStepValue);
         break;
       case 2: // Configurar Micro-passo
         currentState = MICROSTEP_SETUP;
@@ -332,6 +340,27 @@ void handleRelayTimeSetup() {
   }
 }
 
+void handlePositioningSetup() {
+    int direction = encoder.getDirection();
+    // Ajusta o passo alvo. O encoder gira a lista de passos possíveis.
+    if(direction != 0) {
+      targetStepValue += direction;
+      
+      // Lógica para "dar a volta" (wrap-around)
+      if (targetStepValue < 0) targetStepValue = activeStepsPerRev - 1;
+      if (targetStepValue >= activeStepsPerRev) targetStepValue = 0;
+      
+      display.showPositioningSetup(targetStepValue);
+    }
+
+    if(encoder.isPressed()) {
+      // Confirma o passo alvo e inicia o posicionamento
+      currentState = POSITIONING;
+      startPositioning(targetStepValue);
+      delay(200);
+    }
+}
+
 void startFullCycle() {
   currentState = RUNNING_CYCLE;
   cycleStep = 0;
@@ -405,35 +434,35 @@ void finishCycle() {
   Serial.println("Ciclo completo finalizado");
 }
 
-void handleAngleSetup() {
-  int direction = encoder.getDirection();
-  // Ajuste do ângulo com encoder
-  if(direction != 0) {
-    targetAngle += direction * 18; // Incremento de 1.8 graus (18 décimos)
+// void handleAngleSetup() {
+//   int direction = encoder.getDirection();
+//   // Ajuste do ângulo com encoder
+//   if(direction != 0) {
+//     targetAngle += direction * 18; // Incremento de 1.8 graus (18 décimos)
     
-    // Limita entre 0 e 360 graus
-    if(targetAngle < 0) targetAngle = 3582; // 358.2 graus
-    if(targetAngle >= 3600) targetAngle = 0;
+//     // Limita entre 0 e 360 graus
+//     if(targetAngle < 0) targetAngle = 3582; // 358.2 graus
+//     if(targetAngle >= 3600) targetAngle = 0;
     
-    display.showAngleSetup(targetAngle);
-  }
+//     display.showAngleSetup(targetAngle);
+//   }
   
-  if(encoder.isPressed()) {
-    // Confirma ângulo e inicia posicionamento
-    currentState = POSITIONING;
-    startPositioning();
-    delay(200);
-  }
-}
+//   if(encoder.isPressed()) {
+//     // Confirma ângulo e inicia posicionamento
+//     currentState = POSITIONING;
+//     startPositioning();
+//     delay(200);
+//   }
+// }
 
-void startPositioning() {
+void startPositioning(int targetStep) {
   stepper.enable();
   motorEnabled = true;
 
-  float anglePerStep = 360.0 / activeStepsPerRev;
+  // float anglePerStep = 360.0 / activeStepsPerRev;
   
-  // Calcula posição alvo em steps
-  int targetStep = round((targetAngle / 10.0) / anglePerStep);
+  // // Calcula posição alvo em steps
+  // int targetStep = round((targetAngle / 10.0) / anglePerStep);
   // Calcula menor caminho
   int stepsToMove = targetStep - currentPosition;
 
@@ -445,17 +474,19 @@ void startPositioning() {
     stepsToMove += activeStepsPerRev;
   }
   
-  display.showPositioning(targetAngle, stepsToMove);
+  display.showPositioning(targetStep, stepsToMove);
   
   // Executa movimento
   if(stepsToMove != 0) {
     stepper.moveSteps(stepsToMove);
-    currentPosition = targetStep;
+    // currentPosition = targetStep;
   }
+  currentPosition = targetStep;
   
   // Mantém motor energizado para travar posição
-  Serial.printf("Posicionado em %.1f graus (%d steps)\n", targetAngle/10.0, currentPosition);
-  
+  // Serial.printf("Posicionado em %.1f graus (%d steps)\n", targetAngle/10.0, currentPosition);
+  Serial.printf("Posicionado no passo %d\n", currentPosition);
+
   // Retorna ao menu após 2 segundos
   delay(2000);
   currentState = MENU_MAIN;
