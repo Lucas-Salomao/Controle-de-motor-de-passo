@@ -275,7 +275,7 @@ void DisplayManager::showPositioningSetup(int steps) {
     display.println("=== POSICAO FINAL ===");
     
     display.setTextSize(2);
-    display.setCursor(15, 20);
+    display.setCursor(5, 20);
     display.printf("Passo: %d", steps);
     
     display.setTextSize(1);
