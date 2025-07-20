@@ -26,6 +26,7 @@ public:
     void showMotorDisabled();
     void showMicrostepSetup(int selectedIndex);
     void showRelayTimeSetup(int timeMs);
+    void showRelayOffTimeSetup(int timeMs);
     void showError(const char* message);
     Adafruit_SSD1306* getDisplay();
 };

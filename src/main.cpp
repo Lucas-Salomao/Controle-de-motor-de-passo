@@ -18,6 +18,7 @@ void handlePositioningSetup();
 void handleMicrostepSetup();
 void applyMicrostepSetting(int setting);
 void handleRelayTimeSetup();
+void handleRelayOffTimeSetup();
 
 // Instâncias dos controladores
 StepperController stepper;
@@ -33,7 +34,8 @@ enum SystemState {
   POSITIONING_SETUP,
   MOTOR_DISABLED,
   MICROSTEP_SETUP,
-  RELAY_TIME_SETUP
+  RELAY_TIME_SETUP,
+  RELAY_OFF_TIME_SETUP
 };
 
 const char* menuItems[] = {
@@ -41,7 +43,8 @@ const char* menuItems[] = {
   "2. Posicionamento",
   "3. Micro-passo",
   "4. Tempo do Rele",
-  "5. Desligar Motor"
+  "5. Tempo Rele Desl.",
+  "6. Desligar Motor"
   // Adicione mais itens aqui se precisar no futuro
 };
 const int totalMenuItems = sizeof(menuItems) / sizeof(char*);
@@ -68,6 +71,7 @@ int cyclePosition = 0; // posição atual no ciclo completo
 
 bool resetMenuState = false;
 unsigned long RELAY_ON_TIME = 1000;
+unsigned long STEP_SETTLE_TIME = 1000;
 
 void setup() {
   Serial.begin(115200);
@@ -149,50 +153,14 @@ void loop() {
     case RELAY_TIME_SETUP:
       handleRelayTimeSetup();
       break;
+    
+    case RELAY_OFF_TIME_SETUP: // <-- NOVO CASE
+      handleRelayOffTimeSetup();
+      break;
   }
   
   delay(10); // Pequeno delay para estabilidade
 }
-
-// void handleMainMenu() {
-//   static int menuIndex = 0;
-
-//   int direction = encoder.getDirection();
-  
-//   // Navegação com encoder
-//   if(direction != 0) {
-//     menuIndex += direction; // Use a variável local aqui
-//     if(menuIndex < 0) menuIndex = 3;
-//     if(menuIndex > 3) menuIndex = 0;
-    
-//     display.showMainMenu(menuIndex);
-//   }
-  
-//   // Seleção com botão
-//   if(encoder.isPressed()) {
-//     switch(menuIndex) {
-//       case 0: // Ciclo completo
-//         startFullCycle();
-//         break;
-//       case 1: // Posicionamento
-//         currentState = ANGLE_SETUP;
-//         targetAngle = 0;
-//         display.showAngleSetup(targetAngle);
-//         break;
-//       case 2: // Configurar Micro-passo <-- NOVA OPÇÃO
-//         currentState = MICROSTEP_SETUP;
-//         display.showMicrostepSetup(currentMicrostep);
-//         break;
-//       case 3: // Desabilitar motor
-//         stepper.disable();
-//         motorEnabled = false;
-//         currentState = MOTOR_DISABLED;
-//         display.showMotorDisabled();
-//         break;
-//     }
-//     delay(200); // Debounce
-//   }
-// }
 
 void handleMainMenu() {
   // MODIFICADO: Variáveis de estado do menu
@@ -252,7 +220,11 @@ void handleMainMenu() {
         // Chama a nova função de display (que criaremos a seguir)
         display.showRelayTimeSetup(RELAY_ON_TIME);
         break;
-      case 4: // Desabilitar motor
+      case 4: // Tempo do Relé Desligado
+        currentState = RELAY_OFF_TIME_SETUP;
+        display.showRelayOffTimeSetup(STEP_SETTLE_TIME);
+        break;
+      case 5: // Desabilitar motor
         stepper.disable();
         motorEnabled = false;
         currentState = MOTOR_DISABLED;
@@ -340,6 +312,26 @@ void handleRelayTimeSetup() {
   }
 }
 
+void handleRelayOffTimeSetup() {
+  static int selectedTime = STEP_SETTLE_TIME;
+
+  int direction = encoder.getDirection();
+  if (direction != 0) {
+    selectedTime += direction * 50;
+    if (selectedTime < 50) selectedTime = 50;
+    if (selectedTime > 5000) selectedTime = 5000;
+    display.showRelayOffTimeSetup(selectedTime);
+  }
+
+  if (encoder.isPressed()) {
+    STEP_SETTLE_TIME = selectedTime;
+    currentState = MENU_MAIN;
+    resetMenuState = true;
+    Serial.printf("Novo tempo do rele DESLIGADO definido para: %d ms\n", STEP_SETTLE_TIME);
+    delay(200);
+  }
+}
+
 void handlePositioningSetup() {
     int direction = encoder.getDirection();
     // Ajusta o passo alvo. O encoder gira a lista de passos possíveis.
@@ -400,7 +392,6 @@ void handleRunningCycle() {
       break;
       
     case 1: // Pausa de estabilização após o passo, antes de começar o próximo ciclo.
-      // A constante STEP_SETTLE_TIME vem de config.h (100ms)
       if (currentTime - lastStepTime >= STEP_SETTLE_TIME) {
         // A pausa terminou. Vamos verificar se o ciclo completo acabou.
         if (cyclePosition >= activeStepsPerRev) {

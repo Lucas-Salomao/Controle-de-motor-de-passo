@@ -32,11 +32,6 @@
 // Configurações do Relé
 #define RELAY_PIN       32
 
-// Configurações de timing
-// #define RELAY_ON_TIME   500   // ms
-#define RELAY_OFF_TIME  500   // ms
-#define STEP_SETTLE_TIME 100  // ms
-
 // Configurações do sistema
 #define ANGLE_INCREMENT 18    // 1.8 graus em décimos (18 = 1.8°)
 

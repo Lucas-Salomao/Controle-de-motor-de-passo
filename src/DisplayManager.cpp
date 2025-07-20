@@ -13,11 +13,7 @@ void DisplayManager::begin() {
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0, 0);
-    // display.println("Inicializando...");
-    display.display();
-    
-    // delay(1000);
-    
+    display.display();    
     Serial.println("Display inicializado");
 }
 
@@ -25,41 +21,6 @@ void DisplayManager::clear() {
     display.clearDisplay();
 }
 
-// void DisplayManager::showMainMenu(int selectedIndex) {
-//     clear();
-    
-//     display.setTextSize(1);
-//     display.setCursor(0, 0);
-//     display.println("===MENU PRINCIPAL===");
-//     display.println();
-    
-//     // Opção 1: Ciclo Completo
-//     if(selectedIndex == 0) display.print("> ");
-//     else display.print("  ");
-//     display.println("1. Ciclo Completo");
-    
-//     // Opção 2: Posicionamento
-//     if(selectedIndex == 1) display.print("> ");
-//     else display.print("  ");
-//     display.println("2. Posicionamento");
-
-//     if(selectedIndex == 2) display.print("> ");
-//     else display.print("  ");
-//     display.println("3. Micro-passo");
-    
-//     // Opção 3: Desabilitar Motor
-//     if(selectedIndex == 3) display.print("> ");
-//     else display.print("  ");
-//     display.println("4. Desligar Motor");
-    
-//     display.println();
-//     display.println("Gire: Navegar");
-//     display.println("Clique: Selecionar");
-    
-//     display.display();
-// }
-
-// --- FUNÇÃO showMainMenu COMPLETAMENTE REFEITA ---
 void DisplayManager::showMainMenu(const char* items[], int totalItems, int selectedIndex, int startIndex) {
     clear();
     
@@ -259,6 +220,26 @@ void DisplayManager::showRelayTimeSetup(int timeMs) {
     display.printf("%.2f s", timeMs / 1000.0);
     
     // Instruções
+    display.setTextSize(1);
+    display.setCursor(0, 45);
+    display.println("Gire: Ajustar");
+    display.println("Clique: Confirmar");
+    
+    display.display();
+}
+
+void DisplayManager::showRelayOffTimeSetup(int timeMs) {
+    clear();
+    
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.println("=== TEMPO RELE DESL. ==="); // Título da nova tela
+    display.println();
+    
+    display.setTextSize(2);
+    display.setCursor(15, 20);
+    display.printf("%.2f s", timeMs / 1000.0);
+    
     display.setTextSize(1);
     display.setCursor(0, 45);
     display.println("Gire: Ajustar");
